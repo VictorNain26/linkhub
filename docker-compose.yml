@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: linkhub
+      POSTGRES_USER: linkhub
+      POSTGRES_PASSWORD: linkhub
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linkhub"]
+      interval: 5s
+      retries: 5
+
+  # Facultatif : exécuter l’app dans Docker en dev
+  # (sinon tu lances `pnpm dev` sur l’hôte)
+  app:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile          # ⬅︎ seulement pour DEV
+    command: ["pnpm","dev","-p","3000"]
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      DATABASE_URL: postgres://linkhub:linkhub@db:5432/linkhub
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
