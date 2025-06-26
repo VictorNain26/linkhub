@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import postgres from "postgres";
+import type { NextRequest } from "next/server";
 
-const sql = postgres(process.env.DATABASE_URL!, { idle_timeout: 2 });
+export const config = {
+  matcher: ["/dashboard/:path*"],
+};
 
-export async function middleware() {
+export async function middleware(req: NextRequest) {
   const session = await auth();
-  const id = session?.user?.tenantId ?? "public";
-  await sql`SELECT set_config('app.tenant_id', ${id}, true)`;
+  if (!session) {
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
+  }
   return NextResponse.next();
 }
-
-export const config = { matcher: ["/((?!api/auth|_next|favicon).*)"] };
