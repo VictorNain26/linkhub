@@ -3,13 +3,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator client { provider = "prisma-client-js" }
+generator client {
+  provider = "prisma-client-js"
+}
 
 model Tenant {
-  id     String @id @default(cuid())
-  slug   String @unique
-  name   String
-  users  User[]
+  id    String @id @default(cuid())
+  slug  String @unique
+  name  String
+  users User[]
 }
 
 model User {
@@ -20,4 +22,8 @@ model User {
   role     Role   @default(USER)
 }
 
-enum Role { OWNER ADMIN USER }
+enum Role {
+  OWNER
+  ADMIN
+  USER
+}
