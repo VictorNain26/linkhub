@@ -7,7 +7,7 @@ export default async function Login() {
 
   async function login() {
     "use server";
-    await signIn(undefined, { redirectTo: "/dashboard" });
+    await signIn("google", { redirectTo: "/dashboard" });
   }
 
   return (
