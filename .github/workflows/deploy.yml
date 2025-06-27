@@ -1,0 +1,51 @@
+name: Deploy & migrate
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      # 👉 build statique + type-check + lint
+      - name: Build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          NEXTAUTH_SECRET: "dummy"
+        run: pnpm build
+
+  ## --- Job: Migrations en production --------------------------------
+  migrate:
+    needs: build          # n’exécute que si build OK
+    runs-on: ubuntu-latest
+    environment: production   # (facultatif) pour approvals
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install prisma cli only
+        run: |
+          corepack enable
+          pnpm add -D prisma
+
+      - name: Run Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
