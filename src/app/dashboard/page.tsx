@@ -8,9 +8,10 @@ import { LiveHitsProvider } from "./LiveHitsContext";
 import LiveTotalClicks from "./LiveTotalClicks";
 
 export default async function Dashboard() {
+  /* ────── Contexte et données ------------------------------------ */
   let ctx;
   try {
-    ctx = await currentTenant();
+    ctx = await currentTenant();     // lève si non authentifié
   } catch {
     redirect("/login");
   }
@@ -24,12 +25,15 @@ export default async function Dashboard() {
 
   const initialHits = Object.fromEntries(links.map((l) => [l.id, l.clicks]));
 
+  /* ────── Render -------------------------------------------------- */
   return (
     <LiveHitsProvider tenantSlug={tenant.slug} initial={initialHits}>
       <main className="p-8 space-y-8">
-        {/* header */}
-        <header className="flex items-center gap-4">
+        {/* Header */}
+        <header className="flex flex-wrap items-center gap-4">
           <h1 className="text-2xl font-bold">{tenant.name}</h1>
+
+          {/* lien page publique */}
           <a
             href={`/${tenant.slug}`}
             target="_blank"
@@ -38,22 +42,35 @@ export default async function Dashboard() {
           >
             Page publique
           </a>
+
+          {/* bouton copier */}
           <CopyPublicLink slug={tenant.slug} />
+
+          {/* lien membres (OWNER / ADMIN) */}
+          {["OWNER", "ADMIN"].includes(role) && (
+            <a
+              href="/dashboard/members"
+              className="text-sm underline text-blue-600"
+            >
+              Membres
+            </a>
+          )}
+
           <span className="ml-auto text-xs text-gray-500">role: {role}</span>
         </header>
 
-        {/* live analytics */}
+        {/* Analytics live */}
         <section className="space-y-2">
           <h2 className="font-semibold">Clics en temps réel</h2>
           <LiveTotalClicks />
         </section>
 
-        {/* création */}
+        {/* Création de lien */}
         <section className="max-w-sm">
           <LinkForm />
         </section>
 
-        {/* liste */}
+        {/* Liste des liens */}
         <section>
           {links.length ? (
             <ul className="space-y-3">
