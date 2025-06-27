@@ -59,13 +59,14 @@ jobs:
       - run: pnpm add -D prisma @prisma/client
 
       # 🔓 Débloque la migration marquée failed (no-op si déjà OK)
-      - name: Unlock failed migration (non-interactive)
+      - name: Unlock failed migration
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          echo "y" | pnpm dlx prisma migrate resolve \
-            --rolled-back "20250627121117_add_theme_to_tenant" \
-            --reason "auto-unlock"
+          # répond “y” au prompt interactif
+          echo y | pnpm dlx prisma migrate resolve \
+            --rolled-back "20250627121117_add_theme_to_tenant"
+
 
       - name: Deploy Prisma migrations
         env:
