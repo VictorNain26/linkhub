@@ -7,7 +7,7 @@ export default async function AcceptInvite({
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
-  /* 1. extraire le token depuis la promise */
+  /* 1. extraire le token */
   const { token } = await searchParams;
   if (!token) return <p>Invitation invalide.</p>;
 
@@ -24,9 +24,11 @@ export default async function AcceptInvite({
 
   /* 4. tenter d’accepter l’invitation */
   try {
-    await acceptInvite(token, userId);           // userId est string
-    redirect("/dashboard");
+    await acceptInvite(token, userId); // ← ne déclenche plus le catch
   } catch {
     return <p>Invitation invalide ou expirée.</p>;
   }
+
+  /* 5. redirection finale (hors du try/catch) */
+  redirect("/dashboard");
 }

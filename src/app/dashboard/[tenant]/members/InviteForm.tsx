@@ -3,17 +3,17 @@
 import { useState, useTransition } from "react";
 import { createInvite } from "@/actions/members";
 
-export default function InviteForm() {
-  const [role, setRole]   = useState<"ADMIN" | "USER">("USER");
-  const [link, setLink]   = useState<string | null>(null);
+export default function InviteForm({ tenantSlug }: { tenantSlug: string }) {
+  const [role, setRole] = useState<"ADMIN" | "USER">("USER");
+  const [link, setLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, start]  = useTransition();
+  const [pending, start] = useTransition();
 
   function generate() {
     start(async () => {
       try {
-        const token = await createInvite(role);
-        const full  = `${window.location.origin}/accept-invite?token=${token}`;
+        const token = await createInvite(role, tenantSlug);
+        const full = `${window.location.origin}/accept-invite?token=${token}`;
         await navigator.clipboard.writeText(full);
         setLink(full);
         setError(null);

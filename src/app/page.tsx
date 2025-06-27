@@ -7,7 +7,7 @@ export default function Home() {
         href="/login"
         className="bg-black text-white px-6 py-3 rounded hover:opacity-90"
       >
-        Se connecter
+        Commencer
       </a>
     </main>
   );

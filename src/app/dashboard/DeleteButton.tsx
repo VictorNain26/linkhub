@@ -2,9 +2,15 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteLink } from "../../actions/links";
+import { deleteLink } from "@/actions/links";
 
-export default function DeleteButton({ id }: { id: number }) {
+export default function DeleteButton({
+  id,
+  tenantSlug,
+}: {
+  id: number;
+  tenantSlug: string;
+}) {
   const [pending, start] = useTransition();
   const router = useRouter();
 
@@ -16,8 +22,7 @@ export default function DeleteButton({ id }: { id: number }) {
           if (!confirm("Supprimer ce lien ?")) return;
           const fd = new FormData();
           fd.append("id", String(id));
-          await deleteLink(fd);
-
+          await deleteLink(fd, tenantSlug);
           router.refresh();
         })
       }

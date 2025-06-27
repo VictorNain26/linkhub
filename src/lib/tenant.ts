@@ -16,7 +16,9 @@ export type TenantCtx = {
 };
 
 /* ─── Helper principal ─── */
-export async function getTenantContext(slug?: string): Promise<TenantCtx> {
+export async function getTenantContext(
+  slug: string | undefined,
+): Promise<TenantCtx> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("UNAUTHENTICATED");
   const userId = session.user.id;
@@ -57,17 +59,24 @@ export async function getTenantContext(slug?: string): Promise<TenantCtx> {
   }
 
   const current =
-    memberships.find((m) => m.tenant.slug === slug)?.tenant ??
+    slug !== undefined
+      ? memberships.find((m) => m.tenant.slug === slug)?.tenant
+      : null;
+
+  if (slug && !current) throw new Error("FORBIDDEN");
+
+  const chosen =
+    current ??
     memberships.find((m) => m.role === "OWNER")?.tenant ??
     memberships[0]!.tenant;
 
-  const role = memberships.find((m) => m.tenant.id === current.id)!.role;
+  const role = memberships.find((m) => m.tenant.id === chosen.id)!.role;
 
-  return { userId, role, current, memberships };
+  return { userId, role, current: chosen, memberships };
 }
 
-/* Wrapper rétro-compatibilité */
-export async function currentTenant() {
-  const ctx = await getTenantContext();
+/* Wrapper pratique */
+export async function currentTenant(slug?: string) {
+  const ctx = await getTenantContext(slug);
   return { userId: ctx.userId, role: ctx.role, tenant: ctx.current };
 }

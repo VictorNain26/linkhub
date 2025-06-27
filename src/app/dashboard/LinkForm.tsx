@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createLink, updateLink } from "../../actions/links";
+import { createLink, updateLink } from "@/actions/links";
 
 type Props = {
+  tenantSlug: string;
   defaultValues?: { id: number; slug: string; url: string };
   onDone?: () => void;
 };
 
-export default function LinkForm({ defaultValues, onDone }: Props) {
+export default function LinkForm({ tenantSlug, defaultValues, onDone }: Props) {
   const [pending, start] = useTransition();
   const [slug, setSlug] = useState(defaultValues?.slug ?? "");
   const [url, setUrl] = useState(defaultValues?.url ?? "");
@@ -17,7 +18,7 @@ export default function LinkForm({ defaultValues, onDone }: Props) {
 
   function handleSubmit() {
     start(async () => {
-      await action({ id: defaultValues?.id, slug, url });
+      await action({ id: defaultValues?.id, slug, url }, tenantSlug);
       onDone?.();
       setSlug("");
       setUrl("");

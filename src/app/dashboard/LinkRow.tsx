@@ -6,6 +6,7 @@ import { useLiveHits } from "./LiveHitsContext";
 
 type Props = {
   tenantSlug: string;
+  canEdit: boolean;
   link: {
     id: number;
     slug: string;
@@ -14,7 +15,7 @@ type Props = {
   };
 };
 
-export default function LinkRow({ link, tenantSlug }: Props) {
+export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
   const [editing, setEditing] = useState(false);
   const hits = useLiveHits();
   const currentClicks = hits[link.id] ?? link.clicks;
@@ -37,22 +38,26 @@ export default function LinkRow({ link, tenantSlug }: Props) {
           {currentClicks} clic{currentClicks > 1 ? "s" : ""}
         </span>
 
-        <button
-          type="button"
-          onClick={() => setEditing((v) => !v)}
-          className="text-sm"
-          title="Éditer"
-        >
-          ✏️
-        </button>
-
-        <DeleteButton id={link.id} />
+        {canEdit && (
+          <>
+            <button
+              type="button"
+              onClick={() => setEditing((v) => !v)}
+              className="text-sm"
+              title="Éditer"
+            >
+              ✏️
+            </button>
+            <DeleteButton id={link.id} tenantSlug={tenantSlug} />
+          </>
+        )}
       </div>
 
       {/* formulaire d'édition */}
-      {editing && (
+      {editing && canEdit && (
         <div className="bg-white border p-4 rounded shadow">
           <LinkForm
+            tenantSlug={tenantSlug}
             defaultValues={{ id: link.id, slug: link.slug, url: link.url }}
             onDone={() => setEditing(false)}
           />

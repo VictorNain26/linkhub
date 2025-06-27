@@ -6,15 +6,15 @@ import { revalidatePath } from "next/cache";
 import { randomBytes } from "node:crypto";
 
 /* ─── créer un lien d’invite ─── */
-export async function createInvite(role: "ADMIN" | "USER") {
-  const { tenant } = await assertRole("OWNER");
+export async function createInvite(role: "ADMIN" | "USER", slug: string) {
+  const { tenant } = await assertRole("OWNER", slug);
   const token = randomBytes(24).toString("hex");
 
   await prisma.invite.create({
     data: { tenantId: tenant.id, token, role },
   });
 
-  revalidatePath("/dashboard/members");
+  revalidatePath(`/dashboard/${tenant.slug}/members`);
   return token;
 }
 
@@ -36,20 +36,24 @@ export async function acceptInvite(token: string, userId: string) {
 }
 
 /* ─── changer rôle ─── */
-export async function updateRole(userId: string, role: "ADMIN" | "USER") {
-  const { tenant } = await assertRole("OWNER");
+export async function updateRole(
+  userId: string,
+  role: "ADMIN" | "USER",
+  slug: string,
+) {
+  const { tenant } = await assertRole("OWNER", slug);
   await prisma.membership.update({
     where: { userId_tenantId: { userId, tenantId: tenant.id } },
     data: { role },
   });
-  revalidatePath("/dashboard/members");
+  revalidatePath(`/dashboard/${tenant.slug}/members`);
 }
 
 /* ─── retirer membre ─── */
-export async function removeMember(userId: string) {
-  const { tenant } = await assertRole("OWNER");
+export async function removeMember(userId: string, slug: string) {
+  const { tenant } = await assertRole("OWNER", slug);
   await prisma.membership.delete({
     where: { userId_tenantId: { userId, tenantId: tenant.id } },
   });
-  revalidatePath("/dashboard/members");
+  revalidatePath(`/dashboard/${tenant.slug}/members`);
 }

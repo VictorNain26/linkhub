@@ -1,6 +1,6 @@
 "use client";
 
-import { updateRole, removeMember } from "../../../actions/members";
+import { updateRole, removeMember } from "@/actions/members";
 import { useTransition } from "react";
 
 type Member = {
@@ -8,7 +8,13 @@ type Member = {
   role: "OWNER" | "ADMIN" | "USER";
 };
 
-export default function MembersTable({ members }: { members: Member[] }) {
+export default function MembersTable({
+  members,
+  tenantSlug,
+}: {
+  members: Member[];
+  tenantSlug: string;
+}) {
   const [pending, start] = useTransition();
 
   return (
@@ -23,9 +29,7 @@ export default function MembersTable({ members }: { members: Member[] }) {
       <tbody>
         {members.map((m) => (
           <tr key={m.user.id} className="border-t">
-            <td className="p-2">
-              {m.user.name ?? m.user.email ?? "?"}
-            </td>
+            <td className="p-2">{m.user.name ?? m.user.email ?? "?"}</td>
             <td className="p-2 text-center">{m.role}</td>
             <td className="p-2 text-right space-x-2">
               {m.role !== "OWNER" && (
@@ -38,6 +42,7 @@ export default function MembersTable({ members }: { members: Member[] }) {
                         updateRole(
                           m.user.id,
                           m.role === "ADMIN" ? "USER" : "ADMIN",
+                          tenantSlug,
                         ),
                       )
                     }
@@ -52,7 +57,7 @@ export default function MembersTable({ members }: { members: Member[] }) {
                     onClick={() =>
                       start(async () => {
                         if (!confirm("Retirer ce membre ?")) return;
-                        await removeMember(m.user.id);
+                        await removeMember(m.user.id, tenantSlug);
                       })
                     }
                     className="text-red-600 disabled:opacity-40"

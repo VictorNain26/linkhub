@@ -8,18 +8,20 @@ import LiveTotalClicks from "../LiveTotalClicks";
 export default async function TenantDashboard({
   params,
 }: {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }) {
-  const { tenant: slug } = await params;
-  const ctx               = await getTenantContext(slug);
-  const { current: tenant, userId } = ctx;
+  const { tenant: slug } = params;
+  const ctx = await getTenantContext(slug);
+  const { current: tenant, role } = ctx;
 
+  /* Tous les liens du workspace (plus de filtre userId) */
   const links = await prisma.link.findMany({
-    where: { tenantId: tenant.id, userId },
+    where: { tenantId: tenant.id },
     orderBy: { createdAt: "desc" },
   });
 
   const initialHits = Object.fromEntries(links.map((l) => [l.id, l.clicks]));
+  const canEdit = role === "OWNER" || role === "ADMIN";
 
   return (
     <LiveHitsProvider tenantSlug={tenant.slug} initial={initialHits}>
@@ -29,15 +31,22 @@ export default async function TenantDashboard({
           <LiveTotalClicks />
         </section>
 
-        <section className="max-w-sm">
-          <LinkForm />
-        </section>
+        {canEdit && (
+          <section className="max-w-sm">
+            <LinkForm tenantSlug={tenant.slug} />
+          </section>
+        )}
 
         <section>
           {links.length ? (
             <ul className="space-y-3">
               {links.map((l) => (
-                <LinkRow key={l.id} link={l} tenantSlug={tenant.slug} />
+                <LinkRow
+                  key={l.id}
+                  link={l}
+                  tenantSlug={tenant.slug}
+                  canEdit={canEdit}
+                />
               ))}
             </ul>
           ) : (

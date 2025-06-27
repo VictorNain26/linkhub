@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { currentTenant } from "@/lib/tenant";
+import { assertRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -11,33 +11,40 @@ const linkSchema = z.object({
   url: z.string().url(),
 });
 
-export async function createLink(data: unknown) {
-  const { tenant, userId } = await currentTenant();
+/* ─────── créer ─────── */
+export async function createLink(data: unknown, tenantSlug: string) {
+  // OWNER ou ADMIN seulement
+  const { tenant, userId } = await assertRole("ADMIN", tenantSlug);
   const { slug, url } = linkSchema.parse(data);
 
   await prisma.link.create({
     data: { slug, url, tenantId: tenant.id, userId },
   });
+
   revalidatePath(`/dashboard/${tenant.slug}`);
 }
 
-export async function updateLink(data: unknown) {
-  const { tenant } = await currentTenant();
+/* ─────── mettre à jour ─────── */
+export async function updateLink(data: unknown, tenantSlug: string) {
+  const { tenant } = await assertRole("ADMIN", tenantSlug);
   const { id, slug, url } = linkSchema.parse(data);
 
   await prisma.link.updateMany({
     where: { id, tenantId: tenant.id },
     data: { slug, url },
   });
+
   revalidatePath(`/dashboard/${tenant.slug}`);
 }
 
-export async function deleteLink(formData: FormData) {
-  const { tenant } = await currentTenant();
+/* ─────── supprimer ─────── */
+export async function deleteLink(formData: FormData, tenantSlug: string) {
+  const { tenant } = await assertRole("ADMIN", tenantSlug);
   const id = Number(formData.get("id"));
 
   await prisma.link.deleteMany({
     where: { id, tenantId: tenant.id },
   });
+
   revalidatePath(`/dashboard/${tenant.slug}`);
 }
