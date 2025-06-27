@@ -1,36 +1,41 @@
-name: CI / Deploy
+name: CI + Migrate + Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
 
-concurrency: ci-${{ github.ref }}   # 1 run simultané par branche
+concurrency: ci-${{ github.ref }}   # 1 seul run par branche
 
+env:
+  # Versions centralisées ───────────
+  NODE_VERSION: 22
+  PNPM_VERSION: 10.12.3              # ← même version que dans package.json
+
+# ──────────────────────────────────────────── JOB : BUILD ──
 jobs:
-# ─────────────────────────────────────────────── BUILD ──
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Installe pnpm 8.x et l’ajoute au PATH
+      # Installe pnpm 10.12.3 et l'ajoute au PATH
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
-          run_install: false          # on installera après le cache
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
 
-      # 2) Node + cache pnpm (clé = hash de pnpm-lock.yaml)
+      # Installe Node + cache pnpm basé sur pnpm-lock.yaml
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # 3) Dépendances
+      # Dépendances
       - run: pnpm install --frozen-lockfile
 
-      # 4) Lint, types, tests, build
+      # Lint / TS / tests / build
       - run: pnpm lint
       - run: pnpm tsc --noEmit
       - run: pnpm test -- --run
@@ -39,24 +44,25 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
 
-# ─────────────────────────────────────────────── MIGRATE ──
+# ───────────────────────────────────────── JOB : MIGRATE ──
   migrate:
     needs: build
-    if: github.ref == 'refs/heads/main'        # migrations seulement en prod
+    if: github.ref == 'refs/heads/main'          # migrations seulement sur main
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      # Ajoute Prisma CLI (léger) pour ce job
       - run: pnpm add -D prisma @prisma/client
 
       - name: Deploy Prisma migrations
@@ -64,9 +70,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm dlx prisma migrate deploy
 
-# ─────────────────────────────────────────────── DEPLOY ──
+# ───────────────────────────────────────── JOB : DEPLOY ──
   deploy:
-    needs: [build, migrate]
+    needs: [build, migrate]          # s'exécute après succès complet
     runs-on: ubuntu-latest
     permissions:
       deployments: write
@@ -74,17 +80,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
 
       - run: pnpm add -g vercel@latest
 
-      - name: Deploy to Vercel (prod)
+      - name: Deploy to Vercel (production)
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TOKEN:  ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: vercel deploy --prod --yes
