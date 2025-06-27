@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createLink, updateLink } from "./actions/links";
+import { createLink, updateLink } from "../../actions/links";
 
 type Props = {
   defaultValues?: { id: number; slug: string; url: string };

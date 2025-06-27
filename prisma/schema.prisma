@@ -105,17 +105,14 @@ model Membership {
 }
 
 model Invite {
-  id    String @id @default(cuid())
-  email String
-  role  Role   @default(USER)
-  token String @unique
-
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  createdAt  DateTime  @default(now())
-  acceptedAt DateTime?
-  expiresAt  DateTime  @default(dbgenerated("now() + interval '7 days'"))
-
-  @@unique([tenantId, email])
+  id        String   @id @default(cuid())
+  token     String   @unique
+  role      Role     @default(USER)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  maxUses   Int      @default(1)
+  uses      Int      @default(0)
+  expiresAt DateTime @default(dbgenerated("now() + interval '30 days'"))
+  createdAt DateTime @default(now())
 }
+

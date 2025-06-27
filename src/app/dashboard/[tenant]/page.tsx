@@ -11,7 +11,7 @@ export default async function TenantDashboard({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant: slug } = await params;
-  const ctx             = await getTenantContext(slug);
+  const ctx               = await getTenantContext(slug);
   const { current: tenant, userId } = ctx;
 
   const links = await prisma.link.findMany({

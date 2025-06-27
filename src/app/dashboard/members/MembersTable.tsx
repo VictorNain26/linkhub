@@ -1,6 +1,6 @@
 "use client";
 
-import { updateRole, removeMember } from "../actions/members";
+import { updateRole, removeMember } from "../../../actions/members";
 import { useTransition } from "react";
 
 type Member = {

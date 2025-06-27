@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { inviteUser } from "../actions/members";
+import { inviteUser } from "../../../actions/members";
 
 export default function InviteForm() {
   const [email, setEmail]   = useState("");

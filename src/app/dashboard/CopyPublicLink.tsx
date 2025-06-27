@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 
-export default function CopyPublicLink({ slug }: { slug: string }) {
+export default function CopyPublicLink({ slug }: { slug: string }) { // <- slug est string
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     const fullUrl = `${window.location.origin}/${slug}`;
     await navigator.clipboard.writeText(fullUrl);
-
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }

@@ -1,15 +1,30 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { acceptInvite } from "@/app/dashboard/actions/members";
+import { acceptInvite } from "@/actions/members";
 
-export default async function AcceptInvite({ searchParams }: { searchParams: { token?: string } }) {
+export default async function AcceptInvite({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  /* 1. extraire le token depuis la promise */
+  const { token } = await searchParams;
+  if (!token) return <p>Invitation invalide.</p>;
+
+  /* 2. vérifier la session */
   const session = await auth();
-  if (!session) redirect(`/login?from=/accept-invite?token=${searchParams.token}`);
+  if (!session) {
+    // pas loggué → on redirige vers login puis retour
+    redirect(`/login?from=/accept-invite?token=${encodeURIComponent(token)}`);
+  }
 
-  if (!searchParams.token) return <p>Invitation invalide.</p>;
+  /* 3. S’assurer que l’ID utilisateur existe */
+  const userId = session.user?.id;
+  if (!userId) return <p>Session invalide.</p>;
 
+  /* 4. tenter d’accepter l’invitation */
   try {
-    await acceptInvite(searchParams.token, session.user.id);
+    await acceptInvite(token, userId);           // userId est string
     redirect("/dashboard");
   } catch {
     return <p>Invitation invalide ou expirée.</p>;

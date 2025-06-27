@@ -1,36 +1,40 @@
-import { redirect } from "next/navigation";
 import { getTenantContext } from "@/lib/tenant";
+import WorkspaceSelect from "./WorkspaceSelect";
 import CopyPublicLink from "./CopyPublicLink";
+import LogoutButton from "./LogoutButton";
 
 export default async function DashboardLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ tenant?: string }>;  // 👈 Promise
+  params: Promise<{ tenant?: string }>;
 }) {
-  const { tenant: slug } = await params;               // 👈 on await
-  const ctx          = await getTenantContext(slug);
+  const { tenant: slug } = await params;
+  const ctx = await getTenantContext(slug);
   const { current, memberships, role } = ctx;
-
-  if (slug !== current.slug) redirect(`/dashboard/${current.slug}`);
 
   return (
     <>
       <header className="flex flex-wrap items-center gap-4 p-4 border-b">
         <h1 className="font-bold text-xl">{current.name}</h1>
 
-        <select
-          className="border p-1"
-          defaultValue={current.slug}
-          onChange={(e) => (location.href = `/dashboard/${e.target.value}`)}
+        <WorkspaceSelect
+          current={current.slug}
+          items={memberships.map((m) => ({
+            slug: m.tenant.slug,
+            name: m.tenant.name,
+            role: m.role,
+          }))}
+        />
+
+        {/* lien Dashboard (toujours visible) */}
+        <a
+          href={`/dashboard/${current.slug}`}
+          className="text-sm underline text-blue-600"
         >
-          {memberships.map((m) => (
-            <option key={m.tenant.id} value={m.tenant.slug}>
-              {m.tenant.name} ({m.role})
-            </option>
-          ))}
-        </select>
+          Dashboard
+        </a>
 
         <a
           href={`/${current.slug}`}
@@ -41,6 +45,14 @@ export default async function DashboardLayout({
           Page publique
         </a>
         <CopyPublicLink slug={current.slug} />
+
+        {["OWNER", "ADMIN"].includes(role) && (
+          <a href="/dashboard/members" className="text-sm underline text-blue-600">
+            Membres
+          </a>
+        )}
+
+        <LogoutButton />
 
         <span className="ml-auto text-xs text-gray-500">role : {role}</span>
       </header>

@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteLink } from "./actions/links";
+import { deleteLink } from "../../actions/links";
 
 export default function DeleteButton({ id }: { id: number }) {
   const [pending, start] = useTransition();
