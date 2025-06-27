@@ -63,9 +63,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          pnpm dlx prisma migrate resolve \
+          echo "y" | pnpm dlx prisma migrate resolve \
             --rolled-back "20250627121117_add_theme_to_tenant" \
-            --yes \
             --reason "auto-unlock"
 
       - name: Deploy Prisma migrations
