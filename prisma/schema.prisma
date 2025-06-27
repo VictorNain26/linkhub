@@ -90,7 +90,7 @@ model Tenant {
 
   members Membership[]
   links   Link[]
-  invites Invite[] // ← inverse de Invite.tenant
+  invites Invite[]
 }
 
 model Membership {

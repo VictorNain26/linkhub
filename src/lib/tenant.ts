@@ -1,22 +1,19 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
-/**
- * Retourne le tenant courant + role, à partir de la session Next-Auth.
- * Si aucun tenant, en crée un (cas première connexion).
- */
-export async function currentTenant() {
+export async function getTenantContext(slug?: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("UNAUTHENTICATED");
-
   const userId = session.user.id;
 
-  let membership = await prisma.membership.findFirst({
+  // Récupère toutes les memberships
+  const memberships = await prisma.membership.findMany({
     where: { userId },
     include: { tenant: true },
   });
 
-  if (!membership) {
+  /* A. aucun membership ⇒ première connexion ; crée son tenant perso */
+  if (memberships.length === 0) {
     const tenant = await prisma.tenant.create({
       data: {
         name: session.user.name ?? "Mon espace",
@@ -24,19 +21,22 @@ export async function currentTenant() {
         members: { create: { userId, role: "OWNER" } },
       },
     });
-    membership = {
-      userId,
-      tenantId: tenant.id,
-      role: "OWNER",
-      tenant,
-    };
+    return { userId, memberships: [{ tenant, role: "OWNER" }], current: tenant };
   }
 
-  // ✅ plus jamais null
+  /* B. on choisit le tenant courant */
+  const current =
+    memberships.find((m) => m.tenant.slug === slug)?.tenant ??
+    memberships.find((m) => m.role === "OWNER")?.tenant ??
+    memberships[0].tenant;
+
+  const roleOfCurrent =
+    memberships.find((m) => m.tenant.id === current.id)!.role;
+
   return {
     userId,
-    role: membership.role,
-    tenant: membership.tenant,
+    memberships,
+    current,
+    role: roleOfCurrent,
   };
 }
-
