@@ -19,13 +19,14 @@ type Props = {
 
 export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
   const [editing, setEditing] = useState(false);
-  const hits = useLiveHits();
-  const currentClicks = hits[link.id] ?? link.clicks;
-  const publicUrl = `/p/${tenantSlug}/${link.slug}`;
+  const hits        = useLiveHits();
+  const clicks      = hits[link.id] ?? link.clicks;
+  const publicUrl   = `/p/${tenantSlug}/${link.slug}`;
 
   return (
     <li className="flex flex-col gap-2 border p-3 rounded">
       <div className="flex items-center gap-2">
+        {/* Link conservé, mais aucun prefetch */}
         <Link
           href={publicUrl}
           prefetch={false}
@@ -37,7 +38,7 @@ export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
         </Link>
 
         <span className="ml-auto text-xs text-gray-500">
-          {currentClicks} clic{currentClicks > 1 ? 's' : ''}
+          {clicks} clic{clicks > 1 ? 's' : ''}
         </span>
 
         {canEdit && (
