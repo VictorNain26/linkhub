@@ -7,32 +7,36 @@ import { auth } from "@/auth";
  */
 export async function currentTenant() {
   const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthenticated");
+  if (!session?.user?.id) throw new Error("UNAUTHENTICATED");
 
-  // 1) essaie de récupérer membership
-  const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id },
+  const userId = session.user.id;
+
+  let membership = await prisma.membership.findFirst({
+    where: { userId },
     include: { tenant: true },
   });
 
-  if (membership) return membership; // { role, tenant }
-
-  // 2) première connexion → créer tenant + membership OWNER
-  const tenant = await prisma.tenant.create({
-    data: {
-      name: session.user.name ?? "Mon espace",
-      slug: session.user.id.slice(0, 8), // simple slug unique
-      members: {
-        create: {
-          userId: session.user.id,
-          role: "OWNER",
-        },
+  if (!membership) {
+    const tenant = await prisma.tenant.create({
+      data: {
+        name: session.user.name ?? "Mon espace",
+        slug: userId.slice(0, 8),
+        members: { create: { userId, role: "OWNER" } },
       },
-    },
-  });
+    });
+    membership = {
+      userId,
+      tenantId: tenant.id,
+      role: "OWNER",
+      tenant,
+    };
+  }
 
+  // ✅ plus jamais null
   return {
-    role: "OWNER",
-    tenant,
+    userId,
+    role: membership.role,
+    tenant: membership.tenant,
   };
 }
+

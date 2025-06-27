@@ -1,26 +1,14 @@
-import prisma from "@/lib/prisma";
-
-export default async function Home() {
-  const links = await prisma.link.findMany({
-    take: 10,
-    orderBy: { clicks: "desc" },
-    include: { user: true },
-  });
-
+export default function Home() {
   return (
-    <main className="p-8 space-y-4">
-      <h1 className="text-2xl font-bold">Top links</h1>
-      <ul className="space-y-2">
-        {links.map((l) => (
-          <li key={l.id} className="flex gap-2">
-            <span className="font-mono">{l.slug}</span>
-            <a href={l.url} className="text-blue-600 hover:underline">
-              {l.url}
-            </a>
-            <span className="text-gray-500 ml-auto">{l.clicks} hits</span>
-          </li>
-        ))}
-      </ul>
+    <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-8">
+      <h1 className="text-4xl font-bold">👋 Bienvenue sur LinkHub</h1>
+      <p>Crée ton espace de liens en un clic.</p>
+      <a
+        href="/login"
+        className="bg-black text-white px-6 py-3 rounded hover:opacity-90"
+      >
+        Se connecter
+      </a>
     </main>
   );
 }
