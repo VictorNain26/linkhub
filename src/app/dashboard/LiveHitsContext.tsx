@@ -1,8 +1,8 @@
 "use client";
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { makePusherClient } from "@/lib/pusher";
 
-/** Type d'un compteur de clics par linkId */
 export type HitsMap = Record<number, number>;
 
 const LiveHitsContext = createContext<HitsMap | null>(null);
@@ -24,7 +24,11 @@ export function LiveHitsProvider({
   const [hits, setHits] = useState<HitsMap>(initial);
 
   useEffect(() => {
-    const pusher = makePusherClient();
+    setHits(initial);
+  }, [initial]);
+
+  useEffect(() => {
+    const pusher  = makePusherClient();
     const channel = pusher.subscribe(`tenant-${tenantSlug}`);
 
     channel.bind("click", ({ linkId }: { linkId: number }) => {
