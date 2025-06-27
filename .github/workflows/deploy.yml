@@ -1,45 +1,90 @@
-name: Deploy & migrate
+name: CI / Deploy
+
 on:
-  push: { branches: [main] }
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency: ci-${{ github.ref }}   # 1 run simultané par branche
+
 jobs:
+# ─────────────────────────────────────────────── BUILD ──
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # 1) Installe pnpm 8.x et l’ajoute au PATH
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false          # on installera après le cache
+
+      # 2) Node + cache pnpm (clé = hash de pnpm-lock.yaml)
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install pnpm globally
-        run: npm install -g pnpm@8
+      # 3) Dépendances
+      - run: pnpm install --frozen-lockfile
 
-      - name: Enable Corepack (redirige vers pnpm@8)
-        run: corepack enable
-
-      - name: Install deps
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
+      # 4) Lint, types, tests, build
+      - run: pnpm lint
+      - run: pnpm tsc --noEmit
+      - run: pnpm test -- --run
+      - run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-        run: pnpm build
 
+# ─────────────────────────────────────────────── MIGRATE ──
   migrate:
     needs: build
+    if: github.ref == 'refs/heads/main'        # migrations seulement en prod
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm install -g pnpm@8
-      - run: corepack enable
-      - name: Run Prisma migrations
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: pnpm add -D prisma @prisma/client
+
+      - name: Deploy Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm dlx prisma migrate deploy
+
+# ─────────────────────────────────────────────── DEPLOY ──
+  deploy:
+    needs: [build, migrate]
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: pnpm add -g vercel@latest
+
+      - name: Deploy to Vercel (prod)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy --prod --yes
