@@ -1,14 +1,13 @@
+import { Button } from "@/components/ui/button";
+
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-4xl font-bold">👋 Bienvenue sur LinkHub</h1>
-      <p>Crée ton espace de liens en un clic.</p>
-      <a
-        href="/login"
-        className="bg-black text-white px-6 py-3 rounded hover:opacity-90"
-      >
-        Commencer
-      </a>
+    <main className="min-h-screen flex items-center justify-center gap-4 p-8 bg-[--background]">
+      <Button size="lg">Hello shadcn</Button>
+
+      <Button variant="secondary" asChild>
+        <a href="/login">Commencer</a>
+      </Button>
     </main>
   );
 }

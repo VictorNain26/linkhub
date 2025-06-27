@@ -36,6 +36,7 @@ async function main() {
     data: {
       name: "Alice Hub",
       slug: "alice",
+      theme: { primary: "#ff3478", background: "#fff8fa", radius: 10 },
       members: {
         create: [{ userId: alice.id, role: "OWNER" }],
       },
@@ -61,6 +62,7 @@ async function main() {
     data: {
       name: "Bob Space",
       slug: "bob",
+      theme: { primary: "#ff3478", background: "#fff8fa", radius: 10 },
       members: {
         create: [
           { userId: bob.id, role: "OWNER" },
