@@ -23,15 +23,15 @@ jobs:
       # 👉 build statique + type-check + lint
       - name: Build
         env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-          NEXTAUTH_SECRET: "dummy"
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
         run: pnpm build
 
   ## --- Job: Migrations en production --------------------------------
   migrate:
-    needs: build          # n’exécute que si build OK
+    needs: build
     runs-on: ubuntu-latest
-    environment: production   # (facultatif) pour approvals
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
@@ -40,12 +40,12 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install prisma cli only
+      - name: Install only what we need for Prisma
         run: |
           corepack enable
-          pnpm add -D prisma
+          pnpm install --filter prisma --filter @prisma/client --frozen-lockfile
 
-      - name: Run Prisma migrations
+      - name: Run Prisma migrations on prod DB
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: pnpm dlx prisma migrate deploy
