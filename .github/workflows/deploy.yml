@@ -65,7 +65,7 @@ jobs:
         run: |
           pnpm dlx prisma migrate resolve \
             --rolled-back "20250627121117_add_theme_to_tenant" \
-            --force \
+            --yes \
             --reason "auto-unlock"
 
       - name: Deploy Prisma migrations
