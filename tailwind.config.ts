@@ -9,7 +9,7 @@ const config = {
         background:           'hsl(var(--background) / <alpha-value>)',
       },
       borderRadius: {
-        lg: 'var(--radius-lg, 0.5rem)',
+        lg: 'var(--radius-lg,0.5rem)',
       },
     },
   },

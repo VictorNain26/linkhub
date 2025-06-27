@@ -1,22 +1,16 @@
 export type BrandKit = {
   primary?: string;
-  background?: string;
   primaryForeground?: string;
+  background?: string;
   radiusLg?: number;
 };
 
 export function varsFromTheme(theme: BrandKit | null | undefined) {
-  if (!theme) return {} as React.CSSProperties;
-  const out: Record<string, string | number> = {};
-  for (const [k, v] of Object.entries(theme)) {
-    if (v == null) continue;
-    const cssKey =
-      k === "primaryForeground"
-        ? "--primary-foreground"
-        : k === "radiusLg"
-        ? "--radius-lg"
-        : `--${k}`;
-    out[cssKey] = String(v);
-  }
-  return out as React.CSSProperties;
+  if (!theme) return {};
+  const css: Record<string, string> = {};
+  if (theme.primary) css['--primary'] = theme.primary;
+  if (theme.primaryForeground) css['--primary-foreground'] = theme.primaryForeground;
+  if (theme.background) css['--background'] = theme.background;
+  if (theme.radiusLg) css['--radius-lg'] = `${theme.radiusLg}px`;
+  return css;
 }

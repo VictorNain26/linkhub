@@ -1,8 +1,10 @@
-"use client";
-import { useState } from "react";
-import LinkForm from "./LinkForm";
-import DeleteButton from "./DeleteButton";
-import { useLiveHits } from "./LiveHitsContext";
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import LinkForm from './LinkForm';
+import DeleteButton from './DeleteButton';
+import { useLiveHits } from './LiveHitsContext';
 
 type Props = {
   tenantSlug: string;
@@ -25,17 +27,18 @@ export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
     <li className="flex flex-col gap-2 border p-3 rounded">
       {/* ligne principale */}
       <div className="flex items-center gap-2">
-        <a
+        {/* -- Link au lieu de <a> -- */}
+        <Link
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="font-mono text-blue-600 hover:underline"
         >
           {link.slug}
-        </a>
+        </Link>
 
         <span className="ml-auto text-xs text-gray-500">
-          {currentClicks} clic{currentClicks > 1 ? "s" : ""}
+          {currentClicks} clic{currentClicks > 1 ? 's' : ''}
         </span>
 
         {canEdit && (

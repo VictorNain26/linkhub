@@ -27,8 +27,10 @@
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
     "react": "^19.1.0",
+    "react-colorful": "^5.6.1",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^3.25.67"
   },
   "devDependencies": {

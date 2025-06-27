@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install deps
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Static checks (lint+types)
+        run: |
+          pnpm lint
+          pnpm tsc --noEmit
+
+      - name: Production build
+        env:
+          # Variables minimales pour Next build
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+          NEXTAUTH_SECRET: "dummy"
+        run: pnpm build

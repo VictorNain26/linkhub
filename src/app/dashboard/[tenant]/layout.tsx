@@ -26,7 +26,16 @@ export default async function DashboardLayout({ children, params }: { children: 
           <Link href={`/dashboard/${current.slug}`} className="text-sm underline text-primary">Dashboard</Link>
           <Link href={`/${current.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm underline text-primary">Page publique</Link>
           <CopyPublicLink slug={current.slug} />
-          {role !== 'USER' && <Link href={`/dashboard/${current.slug}/members`} className="text-sm underline text-primary">Membres</Link>}
+          {role !== 'USER' && (
+            <>
+              <Link href={`/dashboard/${current.slug}/members`} className="text-sm underline text-primary">
+                Membres
+              </Link>
+              <Link href={`/dashboard/${current.slug}/appearance`} className="text-sm underline text-primary">
+                Apparence
+              </Link>
+            </>
+          )}
           <LogoutButton />
           <span className="ml-auto text-xs text-muted">role : {role}</span>
         </header>
