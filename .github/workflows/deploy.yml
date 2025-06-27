@@ -58,36 +58,20 @@ jobs:
 
       - run: pnpm add -D prisma @prisma/client
 
-      # 🔓 Débloque la migration marquée failed (no-op si déjà OK)
-      - name: Unlock failed migration
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          # répond “y” au prompt interactif
-          echo y | pnpm dlx prisma migrate resolve \
-            --rolled-back "20250627121117_add_theme_to_tenant"
-
-
       - name: Deploy Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm dlx prisma migrate deploy
 
-# ───────────────────────────── DEPLOY ─
   deploy:
     needs: [build, migrate]
     runs-on: ubuntu-latest
-    permissions:
-      deployments: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
+        with: { version: 10.12.3, run_install: false }
       - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+        with: { node-version: 22 }
 
       - run: pnpm add -g vercel@latest
 
@@ -96,4 +80,12 @@ jobs:
           VERCEL_TOKEN:  ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel deploy --prod --yes
+        run: |
+          vercel pull --yes \
+            --token $VERCEL_TOKEN \
+            --org $VERCEL_ORG_ID \
+            --project $VERCEL_PROJECT_ID
+          vercel deploy --prod --yes \
+            --token $VERCEL_TOKEN \
+            --org $VERCEL_ORG_ID \
+            --project $VERCEL_PROJECT_ID

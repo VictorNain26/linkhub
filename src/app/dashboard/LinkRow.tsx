@@ -25,11 +25,10 @@ export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
 
   return (
     <li className="flex flex-col gap-2 border p-3 rounded">
-      {/* ligne principale */}
       <div className="flex items-center gap-2">
-        {/* -- Link au lieu de <a> -- */}
         <Link
           href={publicUrl}
+          prefetch={false}
           target="_blank"
           rel="noopener noreferrer"
           className="font-mono text-blue-600 hover:underline"
@@ -45,7 +44,7 @@ export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
           <>
             <button
               type="button"
-              onClick={() => setEditing((v) => !v)}
+              onClick={() => setEditing(v => !v)}
               className="text-sm"
               title="Éditer"
             >
@@ -56,7 +55,6 @@ export default function LinkRow({ link, tenantSlug, canEdit }: Props) {
         )}
       </div>
 
-      {/* formulaire d'édition */}
       {editing && canEdit && (
         <div className="bg-white border p-4 rounded shadow">
           <LinkForm
