@@ -15,37 +15,33 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install deps
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
+      - name: Enable Corepack
+        run: corepack enable
 
-      # 👉 build statique + type-check + lint
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
       - name: Build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
         run: pnpm build
 
-  ## --- Job: Migrations en production --------------------------------
   migrate:
     needs: build
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
-      - name: Install only what we need for Prisma
-        run: |
-          corepack enable
-          pnpm install --filter prisma --filter @prisma/client --frozen-lockfile
-
-      - name: Run Prisma migrations on prod DB
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install prisma cli
+        run: pnpm add -D prisma @prisma/client
+      - name: Run Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm dlx prisma migrate deploy
