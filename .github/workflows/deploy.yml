@@ -1,59 +1,100 @@
-name: Deploy to Vercel (CLI only)
+name: CI + Migrate + Deploy
 
 on:
   push:
-    branches: [main]        # change si besoin
-  workflow_dispatch:        # déclenchement manuel possible
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+  PNPM_VERSION: 10.12.3            # même version que dans package.json
 
 jobs:
-  build-and-deploy:
+  # ─────────────────────────── BUILD ─
+  build:
     runs-on: ubuntu-latest
-    env:
-      # Ces deux variables sont lues par le CLI pour cibler le bon projet
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
     steps:
-      # 1) Récupération du code
       - uses: actions/checkout@v4
 
-      # 2) Mise en cache npm (accélère les builds)
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      # 3) Installation des dépendances
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm tsc --noEmit
+      - run: pnpm test --run
+      - run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
 
-      # 4) Tests & build applicatif
-      - run: npm run test:ci         # adapte si tu n’as pas de tests
-      - run: npm run build
+  # ──────────────────────── MIGRATE (prod) ─
+  migrate:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      # 5) Migrations (ex. Prisma) – retire si inutile
-      - run: npx prisma migrate deploy
+      - run: pnpm add -D prisma @prisma/client
 
-      # 6) Récupère les variables d’env + conf Vercel
-      - name: Vercel › pull config
+      - name: Deploy Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm dlx prisma migrate deploy
+
+  # ─────────────────────────── DEPLOY ─
+  deploy:
+    needs: [build, migrate]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - run: pnpm add -g vercel@latest
+
+      - name: Vercel ▸ pull config
         run: |
-          npx vercel pull \
-            --yes \
-            --environment=production \
-            --token ${{ secrets.VERCEL_TOKEN }}
+          vercel pull --yes --environment=production --token $VERCEL_TOKEN
 
-      # 7) Build Vercel en local (utilise l’artifact déjà produit)
-      - name: Vercel › build
-        run: npx vercel build --prod
+      - name: Vercel ▸ build
+        run: vercel build --prod
 
-      # 8) Déploiement de l’artifact
-      - name: Vercel › deploy
-        run: |
-          npx vercel deploy \
-            --prebuilt \
-            --prod \
-            --token ${{ secrets.VERCEL_TOKEN }}
-
-    # Empêche qu’un ancien job encore en cours déploie la branche après coup
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+      - name: Vercel ▸ deploy
+        run: vercel deploy --prebuilt --prod --yes --token $VERCEL_TOKEN
