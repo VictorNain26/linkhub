@@ -6,10 +6,10 @@ services:
       POSTGRES_DB:       linkhub
       POSTGRES_USER:     linkhub
       POSTGRES_PASSWORD: linkhub
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U linkhub"]
       interval: 5s
@@ -19,20 +19,24 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: ["pnpm","dev","-p","3000"]
-    environment:
-      DATABASE_URL:       postgres://linkhub:linkhub@db:5432/linkhub?schema=public
-      NEXTAUTH_SECRET:    ${NEXTAUTH_SECRET}
-      GOOGLE_CLIENT_ID:   ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
-    ports:
-      - "3000:3000"
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://linkhub:linkhub@db:5432/linkhub?schema=public
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    command: >
+      sh -c "
+        pnpm prisma migrate deploy &&
+        pnpm prisma generate &&
+        pnpm dev -p 3000
+      "
+    ports:
+      - "3000:3000"
 
 volumes:
   pgdata:

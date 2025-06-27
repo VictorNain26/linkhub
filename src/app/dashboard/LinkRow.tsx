@@ -1,8 +1,8 @@
 "use client";
-
 import { useState } from "react";
 import LinkForm from "./LinkForm";
 import DeleteButton from "./DeleteButton";
+import { useLiveHits } from "./LiveHitsContext";
 
 type Props = {
   tenantSlug: string;
@@ -16,6 +16,8 @@ type Props = {
 
 export default function LinkRow({ link, tenantSlug }: Props) {
   const [editing, setEditing] = useState(false);
+  const hits = useLiveHits();
+  const currentClicks = hits[link.id] ?? link.clicks;
   const publicUrl = `/p/${tenantSlug}/${link.slug}`;
 
   return (
@@ -32,7 +34,7 @@ export default function LinkRow({ link, tenantSlug }: Props) {
         </a>
 
         <span className="ml-auto text-xs text-gray-500">
-          {link.clicks} clic{link.clicks > 1 ? "s" : ""}
+          {currentClicks} clic{currentClicks > 1 ? "s" : ""}
         </span>
 
         <button

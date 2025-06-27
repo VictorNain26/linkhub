@@ -5,16 +5,18 @@ import { pusherServer } from "@/lib/pusher";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { tenant: string; slug: string } },
+  ctx: { params: { tenant: string; slug: string } },
 ) {
-  const { tenant, slug } = params;
+  const { tenant, slug } = await ctx.params;
 
   const link = await prisma.link.findFirst({
     where: { slug, tenant: { slug: tenant } },
     select: { id: true, url: true },
   });
 
-  if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!link) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   prisma.link
     .update({ where: { id: link.id }, data: { clicks: { increment: 1 } } })
