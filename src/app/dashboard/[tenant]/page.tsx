@@ -8,19 +8,19 @@ import LiveTotalClicks from '../LiveTotalClicks';
 export default async function TenantDashboard({
   params,
 }: {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }) {
-  const { tenant: slug } = params;
-  const ctx               = await getTenantContext(slug);
+  const { tenant: slug } = await params;
+  const ctx = await getTenantContext(slug);
   const { current: tenant, role } = ctx;
 
   const links = await prisma.link.findMany({
-    where:  { tenantId: tenant.id },
+    where: { tenantId: tenant.id },
     orderBy: { createdAt: 'desc' },
   });
 
-  const initialHits = Object.fromEntries(links.map(l => [l.id, l.clicks]));
-  const canEdit     = role !== 'USER';
+  const initialHits = Object.fromEntries(links.map((l) => [l.id, l.clicks]));
+  const canEdit = role !== 'USER';
 
   return (
     <LiveHitsProvider tenantSlug={tenant.slug} initial={initialHits}>
@@ -39,8 +39,13 @@ export default async function TenantDashboard({
         <section>
           {links.length ? (
             <ul className="space-y-3">
-              {links.map(l => (
-                <LinkRow key={l.id} link={l} tenantSlug={tenant.slug} canEdit={canEdit} />
+              {links.map((l) => (
+                <LinkRow
+                  key={l.id}
+                  link={l}
+                  tenantSlug={tenant.slug}
+                  canEdit={canEdit}
+                />
               ))}
             </ul>
           ) : (

@@ -5,14 +5,15 @@ import TenantThemeProvider from '@/components/TenantThemeProvider';
 import type { BrandKit } from '@/lib/theme';
 
 export default async function Appearance({
-  params: { tenant },
+  params,
 }: {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }) {
+  const { tenant } = await params;
   const { tenant: t } = await assertRole('ADMIN', tenant);
 
   const record = await prisma.tenant.findUnique({
-    where:  { id: t.id },
+    where: { id: t.id },
     select: { theme: true },
   });
 
@@ -21,7 +22,7 @@ export default async function Appearance({
   return (
     <TenantThemeProvider theme={currentTheme}>
       <main className="p-8 max-w-md space-y-8 bg-background text-foreground">
-        <h1 className="text-2xl font-bold">Thème & Brand kit</h1>
+        <h1 className="text-2xl font-bold">Thème &amp; Brand kit</h1>
         <ThemeForm tenantSlug={tenant} current={currentTheme} />
       </main>
     </TenantThemeProvider>

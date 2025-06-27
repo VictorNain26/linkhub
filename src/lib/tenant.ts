@@ -1,17 +1,30 @@
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
-import { randomBytes } from "node:crypto";
+import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
+import { randomBytes } from 'node:crypto';
+import type { Prisma } from '@prisma/client';
 
 /* ─── Types ─── */
 export type TenantCtx = {
   userId: string;
-  role: "OWNER" | "ADMIN" | "USER";
-  current: { id: string; slug: string; name: string; createdAt: Date };
+  role: 'OWNER' | 'ADMIN' | 'USER';
+  current: {
+    id: string;
+    slug: string;
+    name: string;
+    createdAt: Date;
+    theme: Prisma.JsonValue | null;
+  };
   memberships: {
     userId: string;
     tenantId: string;
-    role: "OWNER" | "ADMIN" | "USER";
-    tenant: { id: string; slug: string; name: string; createdAt: Date };
+    role: 'OWNER' | 'ADMIN' | 'USER';
+    tenant: {
+      id: string;
+      slug: string;
+      name: string;
+      createdAt: Date;
+      theme: Prisma.JsonValue | null;
+    };
   }[];
 };
 
@@ -20,7 +33,7 @@ export async function getTenantContext(
   slug: string | undefined,
 ): Promise<TenantCtx> {
   const session = await auth();
-  if (!session?.user?.id) throw new Error("UNAUTHENTICATED");
+  if (!session?.user?.id) throw new Error('UNAUTHENTICATED');
   const userId = session.user.id;
 
   let memberships = await prisma.membership.findMany({
@@ -31,15 +44,17 @@ export async function getTenantContext(
   /* première connexion : crée un workspace perso */
   if (memberships.length === 0) {
     let slugCandidate = userId.slice(0, 8);
-    while (await prisma.tenant.findUnique({ where: { slug: slugCandidate } })) {
-      slugCandidate = randomBytes(4).toString("hex");
+    while (
+      await prisma.tenant.findUnique({ where: { slug: slugCandidate } })
+    ) {
+      slugCandidate = randomBytes(4).toString('hex');
     }
 
     const tenant = await prisma.tenant.create({
       data: {
-        name: session.user.name ?? "Mon espace",
+        name: session.user.name ?? 'Mon espace',
         slug: slugCandidate,
-        members: { create: { userId, role: "OWNER" } },
+        members: { create: { userId, role: 'OWNER' } },
       },
     });
 
@@ -47,12 +62,13 @@ export async function getTenantContext(
       {
         userId,
         tenantId: tenant.id,
-        role: "OWNER",
+        role: 'OWNER',
         tenant: {
           id: tenant.id,
           slug: tenant.slug,
           name: tenant.name,
           createdAt: tenant.createdAt,
+          theme: tenant.theme,
         },
       },
     ];
@@ -63,11 +79,11 @@ export async function getTenantContext(
       ? memberships.find((m) => m.tenant.slug === slug)?.tenant
       : null;
 
-  if (slug && !current) throw new Error("FORBIDDEN");
+  if (slug && !current) throw new Error('FORBIDDEN');
 
   const chosen =
     current ??
-    memberships.find((m) => m.role === "OWNER")?.tenant ??
+    memberships.find((m) => m.role === 'OWNER')?.tenant ??
     memberships[0]!.tenant;
 
   const role = memberships.find((m) => m.tenant.id === chosen.id)!.role;

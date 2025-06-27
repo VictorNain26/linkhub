@@ -1,28 +1,40 @@
-import prisma from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import TenantThemeProvider from "@/components/TenantThemeProvider";
-import Link from "next/link";
+import prisma from '@/lib/prisma';
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import TenantThemeProvider from '@/components/TenantThemeProvider';
+import Link from 'next/link';
 
-type Props = { params: { tenant: string } };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tenant: string }>;
+}): Promise<Metadata> {
+  const { tenant } = await params;
   const t = await prisma.tenant.findUnique({
-    where: { slug: params.tenant },
+    where: { slug: tenant },
     select: { name: true },
   });
-  return { title: t ? `${t.name} — LinkHub` : "Page inexistante" };
+  return { title: t ? `${t.name} — LinkHub` : 'Page inexistante' };
 }
 
-export default async function TenantPage({ params }: Props) {
+export default async function TenantPage({
+  params,
+}: {
+  params: Promise<{ tenant: string }>;
+}) {
+  const { tenant } = await params;
+
   const data = await prisma.tenant.findUnique({
-    where: { slug: params.tenant },
+    where: { slug: tenant },
     select: {
       id: true,
       slug: true,
       name: true,
       theme: true,
-      links: { orderBy: { createdAt: "asc" }, select: { id: true, slug: true } },
+      links: {
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, slug: true },
+      },
     },
   });
   if (!data) notFound();

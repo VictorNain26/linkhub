@@ -1,20 +1,20 @@
-import { assertRole } from "@/lib/rbac";
-import prisma from "@/lib/prisma";
-import InviteForm from "./InviteForm";
-import MembersTable from "./MembersTable";
+import { assertRole } from '@/lib/rbac';
+import prisma from '@/lib/prisma';
+import InviteForm from './InviteForm';
+import MembersTable from './MembersTable';
 
 export default async function MembersPage({
   params,
 }: {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }) {
-  const { tenant: slug } = params;
-  const { tenant } = await assertRole("ADMIN", slug);
+  const { tenant: slug } = await params;
+  const { tenant } = await assertRole('ADMIN', slug);
 
   const members = await prisma.membership.findMany({
     where: { tenantId: tenant.id },
     include: { user: { select: { email: true, name: true, id: true } } },
-    orderBy: { role: "desc" },
+    orderBy: { role: 'desc' },
   });
 
   return (

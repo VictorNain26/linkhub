@@ -9,6 +9,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({
@@ -16,9 +17,9 @@ export default async function DashboardLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }) {
-  const { tenant: slug } = params;
+  const { tenant: slug } = await params;
   const ctx = await getTenantContext(slug);
   const { current, memberships, role } = ctx;
 
@@ -31,23 +32,33 @@ export default async function DashboardLayout({
 
   return (
     <TenantThemeProvider theme={theme}>
-      <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-background text-foreground`}>
+      <div
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-background text-foreground`}
+      >
         <header className="flex flex-wrap items-center gap-4 p-4 border-b border-border">
           <h1 className="font-bold text-xl">{current.name}</h1>
 
           <WorkspaceSelect
             current={current.slug}
-            items={memberships.map(m => ({
+            items={memberships.map((m) => ({
               slug: m.tenant.slug,
               name: m.tenant.name,
               role: m.role,
             }))}
           />
 
-          <Link href={`/dashboard/${current.slug}`} className="text-sm underline text-primary">
+          <Link
+            href={`/dashboard/${current.slug}`}
+            className="text-sm underline text-primary"
+          >
             Dashboard
           </Link>
-          <Link href={`/${current.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm underline text-primary">
+          <Link
+            href={`/${current.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm underline text-primary"
+          >
             Page publique
           </Link>
 
@@ -55,17 +66,23 @@ export default async function DashboardLayout({
 
           {role !== 'USER' && (
             <>
-              <Link href={`/dashboard/${current.slug}/members`} className="text-sm underline text-primary">
+              <Link
+                href={`/dashboard/${current.slug}/members`}
+                className="text-sm underline text-primary"
+              >
                 Membres
               </Link>
-              <Link href={`/dashboard/${current.slug}/appearance`} className="text-sm underline text-primary">
+              <Link
+                href={`/dashboard/${current.slug}/appearance`}
+                className="text-sm underline text-primary"
+              >
                 Apparence
               </Link>
             </>
           )}
 
           <LogoutButton />
-          <span className="ml-auto text-xs text-muted">role : {role}</span>
+          <span className="ml-auto text-xs text-muted">role&nbsp;: {role}</span>
         </header>
 
         <div className="flex-1">{children}</div>
