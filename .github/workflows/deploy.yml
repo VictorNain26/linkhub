@@ -72,7 +72,7 @@ jobs:
 
 # ───────────────────────────────────────── JOB : DEPLOY ──
   deploy:
-    needs: [build, migrate]          # s'exécute après succès complet
+    needs: [build, migrate]
     runs-on: ubuntu-latest
     permissions:
       deployments: write
