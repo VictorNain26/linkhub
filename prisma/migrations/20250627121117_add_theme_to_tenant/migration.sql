@@ -9,6 +9,7 @@
 ALTER TABLE "Invite" ALTER COLUMN "expiresAt" SET DEFAULT now() + interval '30 days';
 
 -- AlterTable
-ALTER TABLE "Tenant" DROP COLUMN "bgColor",
-DROP COLUMN "primaryColor",
-ADD COLUMN     "theme" JSONB;
+ALTER TABLE "Tenant"
+  DROP COLUMN IF EXISTS "bgColor",
+  DROP COLUMN IF EXISTS "primaryColor",
+  ADD COLUMN "theme" JSONB;
