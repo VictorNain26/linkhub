@@ -1,9 +1,6 @@
 name: Deploy & migrate
-
 on:
-  push:
-    branches: [main]
-
+  push: { branches: [main] }
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,9 +10,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          cache: npm
 
-      - name: Enable Corepack
+      - name: Install pnpm globally
+        run: npm install -g pnpm@8
+
+      - name: Enable Corepack (redirige vers pnpm@8)
         run: corepack enable
 
       - name: Install deps
@@ -36,11 +36,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Install prisma cli
-        run: pnpm add -D prisma @prisma/client
+          cache: npm
+      - run: npm install -g pnpm@8
+      - run: corepack enable
       - name: Run Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
