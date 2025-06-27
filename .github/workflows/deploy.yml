@@ -5,49 +5,43 @@ on:
     branches: [main]
   pull_request:
 
-concurrency: ci-${{ github.ref }}   # 1 seul run par branche
+concurrency: ci-${{ github.ref }}
 
 env:
-  # Versions centralisées ───────────
   NODE_VERSION: 22
-  PNPM_VERSION: 10.12.3              # ← même version que dans package.json
+  PNPM_VERSION: 10.12.3            # même version que dans package.json
 
-# ──────────────────────────────────────────── JOB : BUILD ──
 jobs:
+# ───────────────────────────── BUILD ─
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Installe pnpm 10.12.3 et l'ajoute au PATH
       - uses: pnpm/action-setup@v2
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
 
-      # Installe Node + cache pnpm basé sur pnpm-lock.yaml
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # Dépendances
       - run: pnpm install --frozen-lockfile
-
-      # Lint / TS / tests / build
       - run: pnpm lint
       - run: pnpm tsc --noEmit
-      - run: pnpm test -- --run
+      - run: pnpm test --run
       - run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
 
-# ───────────────────────────────────────── JOB : MIGRATE ──
+# ───────────────────────────── MIGRATE (prod) ─
   migrate:
     needs: build
-    if: github.ref == 'refs/heads/main'          # migrations seulement sur main
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -62,15 +56,24 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # Ajoute Prisma CLI (léger) pour ce job
       - run: pnpm add -D prisma @prisma/client
 
+      # 🔓 Débloque la migration marquée failed (no-op si déjà OK)
+      - name: Unlock failed migration (safe)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pnpm dlx prisma migrate resolve \
+            --rolled-back "20250627121117_add_theme_to_tenant" \
+            --reason "auto-unlock" || true
+
+      # ▶︎ Applique (ou ré-applique) toutes les migrations
       - name: Deploy Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm dlx prisma migrate deploy
 
-# ───────────────────────────────────────── JOB : DEPLOY ──
+# ───────────────────────────── DEPLOY ─
   deploy:
     needs: [build, migrate]
     runs-on: ubuntu-latest
