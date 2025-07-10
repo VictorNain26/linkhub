@@ -35,54 +35,105 @@ export default async function DashboardLayout({
       <div
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-background text-foreground`}
       >
-        <header className="flex flex-wrap items-center gap-4 p-4 border-b border-border">
-          <h1 className="font-bold text-xl">{current.name}</h1>
+        <header className="border-b border-border bg-card">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <h1 className="font-bold text-xl text-foreground">{current.name}</h1>
+                
+                <WorkspaceSelect
+                  current={current.slug}
+                  items={memberships.map((m) => ({
+                    slug: m.tenant.slug,
+                    name: m.tenant.name,
+                    role: m.role,
+                  }))}
+                />
+              </div>
 
-          <WorkspaceSelect
-            current={current.slug}
-            items={memberships.map((m) => ({
-              slug: m.tenant.slug,
-              name: m.tenant.name,
-              role: m.role,
-            }))}
-          />
+              <nav className="hidden md:flex items-center gap-2">
+                <Link
+                  href={`/dashboard/${current.slug}`}
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href={`/${current.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                >
+                  Page publique
+                </Link>
 
-          <Link
-            href={`/dashboard/${current.slug}`}
-            className="text-sm underline text-primary"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href={`/${current.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm underline text-primary"
-          >
-            Page publique
-          </Link>
+                {role !== 'USER' && (
+                  <>
+                    <Link
+                      href={`/dashboard/${current.slug}/members`}
+                      className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                    >
+                      Membres
+                    </Link>
+                    <Link
+                      href={`/dashboard/${current.slug}/appearance`}
+                      className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                    >
+                      Apparence
+                    </Link>
+                  </>
+                )}
 
-          <CopyPublicLink slug={current.slug} />
+                <CopyPublicLink slug={current.slug} />
+                <LogoutButton />
+              </nav>
 
-          {role !== 'USER' && (
-            <>
-              <Link
-                href={`/dashboard/${current.slug}/members`}
-                className="text-sm underline text-primary"
-              >
-                Membres
-              </Link>
-              <Link
-                href={`/dashboard/${current.slug}/appearance`}
-                className="text-sm underline text-primary"
-              >
-                Apparence
-              </Link>
-            </>
-          )}
+              <div className="flex md:hidden items-center gap-2">
+                <CopyPublicLink slug={current.slug} />
+                <LogoutButton />
+              </div>
+            </div>
 
-          <LogoutButton />
-          <span className="ml-auto text-xs text-muted">role&nbsp;: {role}</span>
+            {/* Navigation mobile */}
+            <div className="md:hidden mt-4 pt-4 border-t border-border">
+              <nav className="flex flex-wrap gap-2">
+                <Link
+                  href={`/dashboard/${current.slug}`}
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href={`/${current.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                >
+                  Page publique
+                </Link>
+
+                {role !== 'USER' && (
+                  <>
+                    <Link
+                      href={`/dashboard/${current.slug}/members`}
+                      className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                    >
+                      Membres
+                    </Link>
+                    <Link
+                      href={`/dashboard/${current.slug}/appearance`}
+                      className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                    >
+                      Apparence
+                    </Link>
+                  </>
+                )}
+              </nav>
+              <div className="mt-2 text-xs text-muted-foreground">
+                Rôle : {role}
+              </div>
+            </div>
+          </div>
         </header>
 
         <div className="flex-1">{children}</div>

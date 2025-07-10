@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import TenantThemeProvider from '@/components/TenantThemeProvider';
 import Link from 'next/link';
+import { Link as LinkIcon } from 'lucide-react';
 
 export async function generateMetadata({
   params,
@@ -41,22 +42,51 @@ export default async function TenantPage({
 
   return (
     <TenantThemeProvider theme={data.theme}>
-      <main className="min-h-screen flex flex-col items-center gap-6 p-8 bg-background text-foreground">
-        <h1 className="text-3xl font-bold text-center">{data.name}</h1>
+      <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                {data.name}
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Découvrez tous mes liens importants en un seul endroit
+              </p>
+            </div>
 
-        <ul className="w-full max-w-sm space-y-3">
-          {data.links.map((l) => (
-            <li key={l.id}>
-              <Link
-                href={`/p/${data.slug}/${l.slug}`}
-                target="_blank"
-                className="block w-full bg-primary text-primary-foreground rounded-lg py-3 text-center hover:opacity-90 transition"
-              >
-                {l.slug}
-              </Link>
-            </li>
-          ))}
-        </ul>
+            {data.links.length > 0 ? (
+              <div className="space-y-4 max-w-md mx-auto">
+                {data.links.map((l) => (
+                  <Link
+                    key={l.id}
+                    href={`/p/${data.slug}/${l.slug}`}
+                    target="_blank"
+                    className="group block w-full bg-card hover:bg-card/80 border border-border rounded-xl p-6 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  >
+                    <span className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
+                      {l.slug}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="size-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LinkIcon className="size-8 text-muted-foreground" />
+                </div>
+                <p className="text-lg text-muted-foreground">
+                  Aucun lien disponible pour le moment
+                </p>
+              </div>
+            )}
+
+            <div className="pt-8">
+              <p className="text-sm text-muted-foreground">
+                Créé avec ❤️ sur LinkHub
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
     </TenantThemeProvider>
   );
