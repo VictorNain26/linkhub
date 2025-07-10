@@ -67,23 +67,6 @@ export default function Home() {
           </Card>
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-20 text-center">
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-primary/5 to-primary/10">
-            <CardContent className="p-12">
-              <h2 className="text-3xl font-bold mb-4">Prêt à simplifier vos liens ?</h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Rejoignez des milliers d&apos;utilisateurs qui font confiance à LinkHub.
-              </p>
-              <Button asChild size="lg" className="text-lg px-8">
-                <Link href="/login">
-                  Créer mon espace
-                  <ArrowRight className="ml-2 size-5" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </main>
   );
