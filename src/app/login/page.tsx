@@ -53,7 +53,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              En vous connectant, vous acceptez nos conditions d'utilisation.
+              En vous connectant, vous acceptez nos conditions d&apos;utilisation.
             </p>
           </div>
         </CardContent>

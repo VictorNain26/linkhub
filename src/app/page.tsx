@@ -61,7 +61,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold">Multi-tenant</h3>
               <p className="text-muted-foreground">
-                Gérez plusieurs espaces de travail avec différents niveaux d'accès.
+                Gérez plusieurs espaces de travail avec différents niveaux d&apos;accès.
               </p>
             </CardContent>
           </Card>
@@ -73,7 +73,7 @@ export default function Home() {
             <CardContent className="p-12">
               <h2 className="text-3xl font-bold mb-4">Prêt à simplifier vos liens ?</h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Rejoignez des milliers d'utilisateurs qui font confiance à LinkHub.
+                Rejoignez des milliers d&apos;utilisateurs qui font confiance à LinkHub.
               </p>
               <Button asChild size="lg" className="text-lg px-8">
                 <Link href="/login">
